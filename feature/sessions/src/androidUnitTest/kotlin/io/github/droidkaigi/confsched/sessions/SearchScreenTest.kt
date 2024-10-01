@@ -8,7 +8,7 @@ import io.github.droidkaigi.confsched.testing.execute
 import io.github.droidkaigi.confsched.testing.robot.SearchScreenRobot
 import io.github.droidkaigi.confsched.testing.robot.SearchScreenRobot.Category
 import io.github.droidkaigi.confsched.testing.robot.SearchScreenRobot.ConferenceDay
-import io.github.droidkaigi.confsched.testing.robot.SearchScreenRobot.Language
+import io.github.droidkaigi.confsched.testing.robot.TimetableItemCardRobot.Language
 import io.github.droidkaigi.confsched.testing.robot.TimetableServerRobot.ServerStatus
 import io.github.droidkaigi.confsched.testing.robot.runRobot
 import io.github.droidkaigi.confsched.testing.rules.RobotTestRule
@@ -143,6 +143,34 @@ class SearchScreenTest(
                                         checkTimetableListItemsDisplayed()
                                     }
                                 }
+                            }
+                        }
+                    }
+                }
+
+                describe("when device is tablet") {
+                    doIt {
+                        setupTabletDevice()
+                        setupTimetableServer(ServerStatus.Operational)
+                        setupSearchScreenContent()
+                    }
+                    itShould("no timetable items are displayed") {
+                        captureScreenWithChecks {
+                            checkTimetableListExists()
+                            checkTimetableListItemsNotDisplayed()
+                        }
+                    }
+
+                    describe("input search word to TextField") {
+                        doIt {
+                            inputDemoSearchWord()
+                        }
+                        itShould("show search word and filtered items") {
+                            captureScreenWithChecks {
+                                checkDemoSearchWordDisplayed()
+                                checkTimetableListItemsHasDemoText()
+                                checkTimetableListDisplayed()
+                                checkTimetableListItemsDisplayed()
                             }
                         }
                     }

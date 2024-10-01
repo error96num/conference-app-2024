@@ -8,18 +8,13 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.CalendarContract
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -28,8 +23,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontFamily
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
@@ -48,10 +43,13 @@ import io.github.droidkaigi.confsched.contributors.contributorsScreenRoute
 import io.github.droidkaigi.confsched.contributors.contributorsScreens
 import io.github.droidkaigi.confsched.designsystem.theme.ColorContrast
 import io.github.droidkaigi.confsched.designsystem.theme.KaigiTheme
+import io.github.droidkaigi.confsched.droidkaigiui.NavHostWithSharedAxisX
+import io.github.droidkaigi.confsched.droidkaigiui.compositionlocal.LocalSharedTransitionScope
 import io.github.droidkaigi.confsched.eventmap.eventMapScreenRoute
 import io.github.droidkaigi.confsched.eventmap.eventMapScreens
 import io.github.droidkaigi.confsched.eventmap.navigateEventMapScreen
 import io.github.droidkaigi.confsched.favorites.favoritesScreenRoute
+import io.github.droidkaigi.confsched.favorites.favoritesScreenWithNavigationIconRoute
 import io.github.droidkaigi.confsched.favorites.favoritesScreens
 import io.github.droidkaigi.confsched.favorites.navigateFavoritesScreen
 import io.github.droidkaigi.confsched.main.MainNestedGraphStateHolder
@@ -80,12 +78,12 @@ import io.github.droidkaigi.confsched.sessions.timetableScreenRoute
 import io.github.droidkaigi.confsched.settings.settingsScreenRoute
 import io.github.droidkaigi.confsched.settings.settingsScreens
 import io.github.droidkaigi.confsched.share.ShareNavigator
+import io.github.droidkaigi.confsched.share.saveToDisk
 import io.github.droidkaigi.confsched.sponsors.sponsorsScreenRoute
 import io.github.droidkaigi.confsched.sponsors.sponsorsScreens
 import io.github.droidkaigi.confsched.staff.staffScreenRoute
 import io.github.droidkaigi.confsched.staff.staffScreens
-import io.github.droidkaigi.confsched.ui.NavHostWithSharedAxisX
-import io.github.droidkaigi.confsched.ui.compositionlocal.LocalSharedTransitionScope
+import io.github.droidkaigi.confsched2024.R
 import kotlinx.collections.immutable.PersistentList
 
 @Composable
@@ -95,7 +93,6 @@ fun KaigiApp(
     fontFamily: FontFamily?,
     modifier: Modifier = Modifier,
 ) {
-    val layoutDirection = LocalLayoutDirection.current
     KaigiTheme(
         colorContrast = colorContrast(),
         fontFamily = fontFamily,
@@ -107,14 +104,7 @@ fun KaigiApp(
             KaigiNavHost(
                 windowSize = windowSize,
                 displayFeatures = displayFeatures,
-                modifier = Modifier.padding(
-                    start = WindowInsets.displayCutout
-                        .asPaddingValues()
-                        .calculateStartPadding(layoutDirection),
-                    end = WindowInsets.displayCutout
-                        .asPaddingValues()
-                        .calculateEndPadding(layoutDirection),
-                ),
+                modifier = Modifier.fillMaxSize(),
             )
         }
     }
@@ -128,6 +118,7 @@ private fun KaigiNavHost(
     displayFeatures: PersistentList<DisplayFeature>,
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
+    mainNestedNavController: NavHostController = rememberNavController(),
     externalNavController: ExternalNavController = rememberExternalNavController(),
 ) {
     SharedTransitionLayout(modifier = modifier) {
@@ -138,13 +129,22 @@ private fun KaigiNavHost(
                 navController = navController,
                 startDestination = mainScreenRoute,
             ) {
-                mainScreen(windowSize, navController, externalNavController)
+                mainScreen(
+                    windowSize = windowSize,
+                    navController = navController,
+                    mainNestedNavController = mainNestedNavController,
+                    externalNavController = externalNavController,
+                )
                 sessionScreens(
                     onNavigationIconClick = navController::popBackStack,
                     onLinkClick = externalNavController::navigate,
                     onCalendarRegistrationClick = externalNavController::navigateToCalendarRegistration,
                     onShareClick = externalNavController::onShareClick,
-                    onFavoriteListClick = { navController.navigate(favoritesScreenRoute) },
+                    onFavoriteListClick = {
+                        navController.navigate(
+                            favoritesScreenWithNavigationIconRoute,
+                        )
+                    },
                 )
 
                 contributorsScreens(
@@ -172,6 +172,7 @@ private fun KaigiNavHost(
                 )
 
                 favoritesScreens(
+                    onNavigationIconClick = navController::popBackStack,
                     onTimetableItemClick = navController::navigateToTimetableItemDetailScreen,
                     contentPadding = PaddingValues(),
                 )
@@ -183,12 +184,14 @@ private fun KaigiNavHost(
 private fun NavGraphBuilder.mainScreen(
     windowSize: WindowSizeClass,
     navController: NavHostController,
+    mainNestedNavController: NavHostController,
     @Suppress("UnusedParameter")
     externalNavController: ExternalNavController,
 ) {
     mainScreen(
         windowSize = windowSize,
         mainNestedGraphStateHolder = KaigiAppMainNestedGraphStateHolder(),
+        mainNestedNavController = mainNestedNavController,
         mainNestedGraph = { mainNestedNavController, contentPadding ->
             nestedSessionScreens(
                 modifier = Modifier,
@@ -201,6 +204,7 @@ private fun NavGraphBuilder.mainScreen(
                 onEventMapItemClick = externalNavController::navigate,
             )
             favoritesScreens(
+                onNavigationIconClick = navController::popBackStack,
                 onTimetableItemClick = navController::navigateToTimetableItemDetailScreen,
                 contentPadding = contentPadding,
             )
@@ -249,7 +253,10 @@ private fun NavGraphBuilder.mainScreen(
                     }
                 },
             )
-            profileCardScreen(contentPadding)
+            profileCardScreen(
+                contentPadding = contentPadding,
+                onClickShareProfileCard = externalNavController::onShareProfileCardClick,
+            )
         },
     )
 }
@@ -301,13 +308,16 @@ private class ExternalNavController(
 ) {
     fun navigate(url: String) {
         val uri: Uri = url.toUri()
-        val launched = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        val nativeAppLaunched = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             navigateToNativeAppApi30(context = context, uri = uri)
         } else {
             navigateToNativeApp(context = context, uri = uri)
         }
-        if (launched.not()) {
-            navigateToCustomTab(context = context, uri = uri)
+        if (nativeAppLaunched) return
+
+        val customTabLaunched = navigateToCustomTab(context = context, uri = uri)
+        if (customTabLaunched.not()) {
+            Toast.makeText(context, R.string.no_compatible_browser_found, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -341,9 +351,21 @@ private class ExternalNavController(
 
     fun onShareClick(timetableItem: TimetableItem) {
         shareNavigator.share(
-            "[${timetableItem.room.name.currentLangTitle}] ${timetableItem.startsTimeString} - ${timetableItem.endsTimeString}\n" +
+            "[${timetableItem.room.name.currentLangTitle}] ${timetableItem.formattedMonthAndDayString} " +
+                "${timetableItem.startsTimeString} - ${timetableItem.endsTimeString}\n" +
                 "${timetableItem.title.currentLangTitle}\n" +
                 timetableItem.url,
+        )
+    }
+
+    fun onShareProfileCardClick(
+        text: String,
+        imageBitmap: ImageBitmap,
+    ) {
+        val imageAbsolutePath = imageBitmap.saveToDisk(context)
+        shareNavigator.shareTextWithImage(
+            text = text,
+            filePath = imageAbsolutePath,
         )
     }
 
@@ -372,6 +394,14 @@ private class ExternalNavController(
     ): Boolean {
         val pm = context.packageManager
 
+        // Get all apps that resolve the specific Url
+        val specializedActivityIntent = Intent(Intent.ACTION_VIEW, uri)
+            .addCategory(Intent.CATEGORY_BROWSABLE)
+        val resolvedSpecializedList: MutableSet<String> =
+            pm.queryIntentActivities(specializedActivityIntent, 0)
+                .map { it.activityInfo.packageName }
+                .toMutableSet()
+
         // Get all Apps that resolve a generic url
         val browserActivityIntent = Intent()
             .setAction(Intent.ACTION_VIEW)
@@ -381,14 +411,6 @@ private class ExternalNavController(
             pm.queryIntentActivities(browserActivityIntent, 0)
                 .map { it.activityInfo.packageName }
                 .toSet()
-
-        // Get all apps that resolve the specific Url
-        val specializedActivityIntent = Intent(Intent.ACTION_VIEW, uri)
-            .addCategory(Intent.CATEGORY_BROWSABLE)
-        val resolvedSpecializedList: MutableSet<String> =
-            pm.queryIntentActivities(specializedActivityIntent, 0)
-                .map { it.activityInfo.packageName }
-                .toMutableSet()
 
         // Keep only the Urls that resolve the specific, but not the generic urls.
         resolvedSpecializedList.removeAll(genericResolvedList)
@@ -404,14 +426,20 @@ private class ExternalNavController(
         return true
     }
 
+    @Suppress("SwallowedException")
     private fun navigateToCustomTab(
         context: Context,
         uri: Uri,
-    ) {
-        CustomTabsIntent.Builder()
-            .setShowTitle(true)
-            .build()
-            .launchUrl(context, uri)
+    ): Boolean {
+        return try {
+            CustomTabsIntent.Builder()
+                .setShowTitle(true)
+                .build()
+                .launchUrl(context, uri)
+            true
+        } catch (ex: ActivityNotFoundException) {
+            false
+        }
     }
 }
 

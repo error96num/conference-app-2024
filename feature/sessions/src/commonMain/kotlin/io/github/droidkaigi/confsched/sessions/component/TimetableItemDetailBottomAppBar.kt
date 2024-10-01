@@ -1,5 +1,11 @@
 package io.github.droidkaigi.confsched.sessions.component
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -12,6 +18,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import conference_app_2024.feature.sessions.generated.resources.calendar_add_on
 import conference_app_2024.feature.sessions.generated.resources.content_description_calendar
@@ -32,8 +40,11 @@ fun TimetableItemDetailBottomAppBar(
     onBookmarkClick: (TimetableItem) -> Unit,
     onCalendarRegistrationClick: (TimetableItem) -> Unit,
     modifier: Modifier = Modifier,
+    windowInsets: WindowInsets = TimetableItemDetailBottomAppBarDefaults.windowInsets(),
     onShareClick: (TimetableItem) -> Unit,
 ) {
+    val haptic = LocalHapticFeedback.current
+
     BottomAppBar(
         modifier = modifier,
         actions = {
@@ -53,7 +64,13 @@ fun TimetableItemDetailBottomAppBar(
         floatingActionButton = {
             FloatingActionButton(
                 modifier = Modifier.testTag(TimetableItemDetailBookmarkIconTestTag),
-                onClick = { onBookmarkClick(timetableItem) },
+                onClick = {
+                    if (!isBookmarked) {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
+
+                    onBookmarkClick(timetableItem)
+                },
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
             ) {
                 val contentDescription = if (isBookmarked) {
@@ -67,6 +84,15 @@ fun TimetableItemDetailBottomAppBar(
                 )
             }
         },
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        windowInsets = windowInsets,
+    )
+}
+
+object TimetableItemDetailBottomAppBarDefaults {
+    @Composable
+    fun windowInsets() = WindowInsets.displayCutout.union(WindowInsets.systemBars).only(
+        WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom,
     )
 }
 

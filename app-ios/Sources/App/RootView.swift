@@ -3,6 +3,7 @@ import ComposableArchitecture
 import ContributorFeature
 import FavoriteFeature
 import LicenseList
+import ProfileCardFeature
 import SearchFeature
 import SponsorFeature
 import StaffFeature
@@ -11,13 +12,14 @@ import TimetableDetailFeature
 import TimetableFeature
 import EventMapFeature
 import Theme
+import KMPClient
 
 public enum DroidKaigiAppTab: Hashable {
     case timetable
     case map
     case favorite
     case about
-    case idCard
+    case profileCard
 }
 
 public struct RootView: View {
@@ -30,25 +32,31 @@ public struct RootView: View {
     }
 
     public var body: some View {
-        Group {
-            switch selection {
-            case .timetable:
-                timetableTab
-            case .map:
-                eventMapTab
-            case .favorite:
-                favoriteTab
-            case .about:
-                aboutTab
-            case .idCard:
-                idCardTab
+        switch store.viewType {
+        case .swiftUI:
+            Group {
+                switch selection {
+                case .timetable:
+                    timetableTab
+                case .map:
+                    eventMapTab
+                case .favorite:
+                    favoriteTab
+                case .about:
+                    aboutTab
+                case .profileCard:
+                    profileCardTab
+                }
             }
+            .navigationBarTitleStyle(
+                color: AssetColors.Surface.onSurface.swiftUIColor,
+                titleTextStyle: .titleMedium,
+                largeTitleTextStyle: .headlineSmall
+            )
+        case .compose:
+            KmpAppComposeViewControllerWrapper()
+                .ignoresSafeArea(.all)
         }
-        .navigationBarTitleStyle(
-            color: AssetColors.Surface.onSurface.swiftUIColor,
-            titleTextStyle: .titleMedium,
-            largeTitleTextStyle: .headlineSmall
-        )
     }
 
     @MainActor
@@ -59,23 +67,32 @@ public struct RootView: View {
             (tab: .map, icon: .icMap),
             (tab: .favorite, icon: .icFav),
             (tab: .about, icon: .icInfo),
-            (tab: .idCard, icon: .icProfileCard),
+            (tab: .profileCard, icon: .icProfileCard),
         ]
-        HStack(spacing: 36) {
-            ForEach(items, id: \.tab) { item in
-                let isSelected = selection == item.tab
-                Button {
-                    selection = item.tab
-                } label: {
-                    Image(item.icon).renderingMode(.template).tint(isSelected ? nil : .white)
+        
+        GeometryReader { geometry in
+            HStack(spacing: 0) {
+                ForEach(items, id: \.tab) { item in
+                    let isSelected = selection == item.tab
+                    Button {
+                        selection = item.tab
+                    } label: {
+                        Image(item.icon).renderingMode(.template).tint(isSelected ? nil : .white)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                            .contentShape(Rectangle())
+                    }
+                    .frame(maxWidth: geometry.size.width / CGFloat(items.count), maxHeight: .infinity, alignment: .center)
                 }
             }
+            .frame(width: geometry.size.width, height: geometry.size.height)
         }
-        .padding(.vertical)
-        .padding(.horizontal, 24)
+        .frame(height: 64)
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 12)
         .background(.ultraThinMaterial, in: Capsule())
         .overlay(Capsule().stroke(.gray, lineWidth: 1))
         .environment(\.colorScheme, .dark)
+        .padding(.horizontal, 48)
     }
 
     @MainActor
@@ -178,12 +195,10 @@ public struct RootView: View {
     }
 
     @MainActor
-    private var idCardTab: some View {
+    private var profileCardTab: some View {
         NavigationStack {
             ZStack(alignment: .bottom) {
-                ScrollView {
-                    Text("ID Card Feature")
-                }
+                KmpProfileCardComposeViewControllerWrapper()
                 tabItems
             }
         }

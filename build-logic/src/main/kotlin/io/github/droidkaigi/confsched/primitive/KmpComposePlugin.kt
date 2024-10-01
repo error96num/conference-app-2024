@@ -37,6 +37,7 @@ class KmpComposePlugin : Plugin<Project> {
                             implementation(libs.library("rin"))
                             implementation(libs.library("composeNavigation"))
                             implementation(libs.library("composeMaterialWindowSize"))
+                            implementation(libs.library("androidxLifecycleRuntimeCompose"))
                             implementation(libs.library("androidxLifecycleViewModel"))
                             implementation(libs.library("androidxLifecycleViewModelCompose"))
                             implementation(libs.library("androidxLifecycleCommon"))
@@ -47,14 +48,15 @@ class KmpComposePlugin : Plugin<Project> {
                             dependencies {
                                 implementation(libs.library("androidxActivityActivityCompose"))
                                 implementation(libs.library("composeUiToolingPreview"))
+                                implementation(libs.library("composeFoundation"))
                             }
                         }
                 }
             }
 
             tasks.withType<KotlinCompile>().configureEach {
-                kotlinOptions {
-                    freeCompilerArgs = freeCompilerArgs + buildComposeMetricsParameters()
+                compilerOptions {
+                    freeCompilerArgs.addAll(buildComposeMetricsParameters())
                 }
             }
         }
