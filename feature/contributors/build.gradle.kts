@@ -8,10 +8,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(projects.core.model)
-                implementation(projects.core.ui)
                 implementation(libs.kotlinxCoroutinesCore)
-                implementation(projects.core.designsystem)
                 implementation(libs.moleculeRuntime)
             }
         }

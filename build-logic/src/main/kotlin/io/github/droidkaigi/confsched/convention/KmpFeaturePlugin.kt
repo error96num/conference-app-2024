@@ -2,6 +2,7 @@ package io.github.droidkaigi.confsched.convention
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.kotlin.dsl.dependencies
 
 class KmpFeaturePlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -14,6 +15,12 @@ class KmpFeaturePlugin : Plugin<Project> {
                 apply("droidkaigi.primitive.kmp.android.hilt")
                 apply("droidkaigi.primitive.kmp.roborazzi")
                 apply("droidkaigi.primitive.detekt")
+            }
+
+            dependencies {
+                add("implementation", project(":core:model"))
+                add("implementation", project(":core:ui"))
+                add("implementation", project(":core:designsystem"))
             }
         }
     }

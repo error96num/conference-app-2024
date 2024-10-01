@@ -10,10 +10,6 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(projects.core.designsystem)
-                implementation(projects.core.ui)
-                implementation(projects.core.model)
-
                 implementation(libs.kotlinSerializationJson)
                 implementation(libs.composeNavigation)
                 implementation(compose.materialIconsExtended)

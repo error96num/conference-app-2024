@@ -9,10 +9,6 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(projects.core.model)
-                implementation(projects.core.ui)
-                implementation(projects.core.designsystem)
-
                 implementation(libs.kotlinxCoroutinesCore)
                 implementation(libs.kotlinSerializationJson)
                 implementation(libs.moleculeRuntime)
