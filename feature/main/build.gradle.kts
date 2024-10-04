@@ -12,10 +12,8 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(compose.materialIconsExtended)
-                implementation(projects.core.model)
-                implementation(projects.core.designsystem)
                 implementation(projects.core.droidkaigiui)
+                implementation(compose.materialIconsExtended)
                 implementation(libs.haze)
             }
         }
