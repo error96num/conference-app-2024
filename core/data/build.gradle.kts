@@ -18,8 +18,8 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(projects.core.model)
-                implementation(projects.core.common)
+                api(projects.core.model)
+                api(projects.core.common)
                 implementation(libs.kotlinxCoroutinesCore)
                 // We use api for test
                 api(libs.androidxDatastoreDatastorePreferences)
