@@ -21,11 +21,11 @@ kotlin {
 
         commonMain {
             dependencies {
-                implementation(projects.core.model)
-                implementation(projects.core.designsystem)
-                implementation(projects.core.data)
                 implementation(compose.materialIconsExtended)
                 implementation(libs.kermit)
+                api(projects.core.model)
+                api(projects.core.designsystem)
+                api(projects.core.data)
                 api(projects.core.common)
                 api(libs.coil)
                 api(libs.coilNetwork)

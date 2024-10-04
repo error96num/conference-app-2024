@@ -64,8 +64,6 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(projects.core.model)
-                api(projects.core.data)
                 api(projects.core.droidkaigiui)
                 api(projects.feature.main)
                 api(projects.feature.sessions)

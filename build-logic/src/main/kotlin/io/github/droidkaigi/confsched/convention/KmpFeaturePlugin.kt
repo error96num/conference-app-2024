@@ -18,9 +18,7 @@ class KmpFeaturePlugin : Plugin<Project> {
             }
 
             dependencies {
-                add("implementation", project(":core:model"))
                 add("implementation", project(":core:droidkaigiui"))
-                add("implementation", project(":core:designsystem"))
             }
         }
     }
