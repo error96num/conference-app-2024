@@ -16,10 +16,6 @@ class KmpFeaturePlugin : Plugin<Project> {
                 apply("droidkaigi.primitive.kmp.roborazzi")
                 apply("droidkaigi.primitive.detekt")
             }
-
-            dependencies {
-                add("implementation", project(":core:droidkaigiui"))
-            }
         }
     }
 }

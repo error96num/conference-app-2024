@@ -11,6 +11,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
+                implementation(projects.core.droidkaigiui)
                 implementation(libs.kotlinxCoroutinesCore)
                 implementation(libs.moleculeRuntime)
             }

@@ -13,6 +13,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
+                implementation(projects.core.droidkaigiui)
                 implementation(libs.kotlinSerializationJson)
                 implementation(libs.composeNavigation)
                 implementation(compose.materialIconsExtended)
